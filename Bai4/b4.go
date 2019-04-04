@@ -5,6 +5,10 @@ import (
 	"math"
 	"math/rand"
 	"time"
+    "io/ioutil"
+    "strings"
+    "io"
+    "log"
 )
 /*
 * Point
@@ -59,7 +63,7 @@ func (cluster Cluster) String() string {
 func initClusters(dataset []Point,k int) (clusters []Cluster) {
     rand.Seed(time.Now().UnixNano())
     randlist := make(map[int]int)
-    for len(randlist)<k{
+    for len(randlist) < k && len(randlist) < len(dataset) {
         randlist[rand.Intn(len(dataset))] +=1
     }
     for i  := range randlist {
@@ -115,22 +119,44 @@ func Kmean(dataset []Point, k int) []Cluster {
 }
 
 func main() {
-	var dataset []Point
-	dataset = append(dataset,Point{X:1,Y:1})
-	dataset = append(dataset,Point{X:1,Y:2})
-	dataset = append(dataset,Point{X:2,Y:1})
-	dataset = append(dataset,Point{X:2,Y:2})
 
-	dataset = append(dataset,Point{X:4,Y:4})
-	dataset = append(dataset,Point{X:4,Y:5})
-	dataset = append(dataset,Point{X:5,Y:4})
-	dataset = append(dataset,Point{X:5,Y:5})
-
-	dataset = append(dataset,Point{X:7,Y:2})
-	dataset = append(dataset,Point{X:7,Y:3})
-	dataset = append(dataset,Point{X:8,Y:2})
-	dataset = append(dataset,Point{X:8,Y:3})
-	clusters := Kmean(dataset, 3)
+	dataset, k := readData("input.txt")
+	clusters := Kmean(dataset, k)
 
 	fmt.Println(clusters)
+}
+
+/*
+* Read data from file
+*/
+func readData(filename string) ([]Point, int) {
+	var dataset []Point
+	var k int
+	var b float64
+	var c float64
+	content, err := ioutil.ReadFile(filename)
+	check(err)
+
+	r := strings.NewReader(string(content))
+	fmt.Fscanln(r, &k)
+	for {
+		_, err := fmt.Fscanf(r, "%v,%v\n", &b, &c)
+		if err == io.EOF {
+			break
+		}
+		check(err)
+		//fmt.Printf("%d:  %f, %f\n", n, b, c)
+		dataset = append(dataset,Point{b,c,0})
+	}
+	return dataset, k
+}
+
+/*
+* Check error
+*/	
+func check(e error) {
+    if e != nil {
+		log.Fatal(e)
+        panic(e)
+    }
 }
